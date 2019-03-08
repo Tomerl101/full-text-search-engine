@@ -5,17 +5,9 @@ searchEngine.addDoc('doc1');
 searchEngine.addDoc('doc2');
 searchEngine.addDoc('doc2');
 
-console.log(JSON.stringify(searchEngine.invertedIndex));
+console.log('searching...');
+console.log(searchEngine.search("quick qui brole"));
 
-// let doCreateDictionary = require('./middleware/createDictionary');
-// const compareWords = require('./util/compareWords');
-// let dictionary;
+console.log(searchEngine.docStore);
 
-// // indexedDB.add(1)
-// async function invertedIndex() {
-//   dictionary = await doCreateDictionary();
-//   sortDictionary = dictionary.sort(compareWords);
-//   console.log(dictionary);
-// }
-
-// invertedIndex();
+// console.log(JSON.stringify(searchEngine.invertedIndex));

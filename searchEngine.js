@@ -1,12 +1,10 @@
-const natural = require('natural');
 const readJson = require('./util/readJson');
-const stringSeperator = require('./util/stringSeperator');
-const stopWords = require('./stopWords');
 const tokenize = require('./util/tokenize');
 
 class SearchEngine {
   constructor() {
     this.invertedIndex = {};
+    this.docStore = {};
   }
 
   /**
@@ -14,22 +12,16 @@ class SearchEngine {
    * every word , tokenize and stem it 
    * and add it to the inverted file
    * we ignore any stopwords in the file
-   * @param {string} fileName 
+   * @param {string} docId 
    */
-  addDoc(fileName) {
+  addDoc(docId) {
     try {
       const wordCount = {};
-      const { id, title, body } = readJson(fileName);
-      const words = stringSeperator(body);
+      const { id, title, body } = readJson(docId);
 
-      //tokenize, stemming and remove stop words
-      const stemTokens = words.map(w => {
-        const token = tokenize(w);
-        return natural.PorterStemmer.stem(token)
-      })
-        .filter(w => !stopWords.includes(w));
-
-      stemTokens.forEach(w => w in wordCount ? wordCount[w] += 1 : wordCount[w] = 1)
+      const tokenizeQuery = tokenize(body);
+      this.docStore[id] = this.getDocLength(body);
+      tokenizeQuery.forEach(w => w in wordCount ? wordCount[w] += 1 : wordCount[w] = 1)
 
       //add word to the inverted index
       for (let word in wordCount) {
@@ -66,37 +58,46 @@ class SearchEngine {
 
   }
 
-  search() {
+  search(searchQuery) {
+    let QueryDocs = {};
+    if (!searchQuery) {
+      return;
+    }
+    const tokenizeQuery = tokenize(searchQuery);
+    tokenizeQuery.forEach(w => {
+      QueryDocs[w] = this.getDocs(w)
+    })
+    return QueryDocs;
+  }
 
+  /**
+   * return list of documents
+   * that the word appear in them
+   * @param {string} word 
+   */
+  getDocs(word) {
+    return this.invertedIndex[word].docs;
+  }
+
+  /**
+   * return total word count
+   * of a specific document
+   * @param {string} doc 
+   */
+  getDocLength(doc) {
+    if (!doc) {
+      return;
+    }
+    return doc.split(" ").length
+  }
+
+  /**
+   * get the number of documents
+   * that added to the inverted index
+   */
+  get docStoreLength() {
+    return Object.keys(this.docStore).length;
   }
 }
 
 module.exports = SearchEngine;
-
-
-//DEPRECATED
-// addWord(word, wordInfo) {
-//   var invertedIndex = this.invertedIndex;
-//   let idx = 0;
-
-//   //search for the word in the invertedIndex e.g: q-> qu -> qui..
-//   while (idx <= word.length - 1) {
-//     var key = word[idx];
-//     if (!(key in invertedIndex)) {
-//       invertedIndex[key] = { docs: {}, df: 0 };
-//     }
-//     idx += 1;
-//     invertedIndex = invertedIndex[key];
-//   }
-
-//   let { docId } = wordInfo;
-//   if (!invertedIndex.docs[docId]) {
-//     // if this doc not exist, then add this doc
-//     invertedIndex.docs[docId] = { tf: wordInfo.tf };
-//     invertedIndex.df += 1;
-//   } else {
-//     // if this doc already exist , then update wordInfo
-//     invertedIndex.docs[docId] = { tf: wordInfo.tf };
-//   }
-//   console.log(JSON.stringify(this.invertedIndex));
-// }
