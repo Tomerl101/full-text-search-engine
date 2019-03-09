@@ -1,6 +1,10 @@
 const readJson = require('./util/readJson');
 const tokenize = require('./util/tokenize');
 const queryPriority = require('./util/queryPriority');
+const getBooleanOp = require('./util/getBooleanOp');
+const boolean = require('./constants/boolean');
+const union = require('./util/union');
+const intersection = require('./util/intersection');
 
 class SearchEngine {
   constructor() {
@@ -83,22 +87,42 @@ class SearchEngine {
     }
   }
 
+  /**
+   * search user query string 
+   * the function will extract boolean operator (AND,OR,NOT)
+   * and return the files that conatin the words in 
+   * the query.
+   * the default search operator is OR
+   * @param {string} searchQuery 
+   */
   search(searchQuery) {
-    let QueryDocs = {};
+    let docsSet = new Set();
+
     if (!searchQuery) {
       return;
     }
 
     const queryOrderByPriorty = queryPriority(searchQuery);
 
-    console.log("queryOrderByPriorty", queryOrderByPriorty);
-    return;
+    queryOrderByPriorty.forEach(query => {
+      const booleanOp = getBooleanOp(query);
+      const tokenizeQuery = tokenize(query);
 
-    const tokenizeQuery = tokenize(searchQuery);
-    tokenizeQuery.forEach(w => {
-      QueryDocs[w] = this.getDocs(w)
+      console.log('query', query);
+      switch (booleanOp) {
+        case boolean.AND:
+          docsSet = this.searchAND(tokenizeQuery, docsSet);
+          break;
+        case boolean.OR:
+          docsSet = this.searchOR(tokenizeQuery, docsSet);
+          break;
+        case boolean.NOT:
+          docsSet = this.searchNOT(tokenizeQuery, docsSet);
+          break;
+      }
+      console.log('docsSets', docsSet);
     })
-    return QueryDocs;
+    return docsSet;
   }
 
   /**
@@ -108,7 +132,7 @@ class SearchEngine {
    */
   getDocs(word) {
     if (word && this.invertedIndex[word]) {
-      return this.invertedIndex[word].docs;
+      return Object.keys(this.invertedIndex[word].docs);
     }
   }
 
@@ -134,6 +158,41 @@ class SearchEngine {
 
   isDocExist(docId) {
     return !!this.docStore[docId];
+  }
+
+  isWordExist(word) {
+    return word && this.invertedIndex[word] ? true : false
+  }
+
+  searchAND(tokenizeQuery, docsSet) {
+    let _docsSet = docsSet;
+    if (tokenizeQuery.length == 1) {
+      const [token1] = tokenizeQuery;
+      let setA = new Set(this.getDocs(token1));
+      if (docsSet.size == 0) {
+        _docsSet = {};
+      } else {
+        _docsSet = intersection(_docsSet, setA);
+      }
+    } else {
+      const [token1, token2] = tokenizeQuery;
+      let setA = this.getDocs(token1);
+      let setB = this.getDocs(token2);
+      _docsSet = intersection(setA, setB);
+    }
+    return _docsSet;
+  }
+
+  searchOR(tokenizeQuery, docsSet) {
+    let _docsSet = docsSet;
+    if (tokenizeQuery.length == 1) {
+      const [token1] = tokenizeQuery;
+      _docsSet = union(_docsSet, this.getDocs(token1));
+    } else {
+      const [token1, token2] = tokenizeQuery;
+      _docsSet = union(this.getDocs(token1), this.getDocs(token2));
+    }
+    return _docsSet;
   }
 }
 
