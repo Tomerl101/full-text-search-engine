@@ -119,6 +119,8 @@ class SearchEngine {
         case boolean.NOT:
           // docsSet = this.searchNOT(tokenizeQuery, docsSet);
           break;
+        default:
+          docsSet = { ...this.getDocs(query) };
       }
       console.log('docsSets', docsSet);
     })
@@ -168,7 +170,7 @@ class SearchEngine {
     let _docsSet = docsSet;
     if (tokenizeQuery.length == 1) {
       const [token1] = tokenizeQuery;
-      let setA = this.getDocs(token1);
+      let setA = new Set(this.getDocs(token1));
       if (docsSet.size == 0) {
         _docsSet = {};
       } else {
@@ -176,8 +178,8 @@ class SearchEngine {
       }
     } else {
       const [token1, token2] = tokenizeQuery;
-      let setA = this.getDocs(token1);
-      let setB = this.getDocs(token2);
+      let setA = new Set(this.getDocs(token1));
+      let setB = new Set(this.getDocs(token2));
       _docsSet = intersection(setA, setB);
     }
     return _docsSet;
@@ -187,10 +189,13 @@ class SearchEngine {
     let _docsSet = docsSet;
     if (tokenizeQuery.length == 1) {
       const [token1] = tokenizeQuery;
-      _docsSet = union(_docsSet, this.getDocs(token1));
+      const setA = new Set(this.getDocs(token1));
+      _docsSet = union(_docsSet, setA);
     } else {
       const [token1, token2] = tokenizeQuery;
-      _docsSet = union(this.getDocs(token1), this.getDocs(token2));
+      const setA = new Set(this.getDocs(token1));
+      const setB = new Set(this.getDocs(token2));
+      _docsSet = union(setA, setB);
     }
     return _docsSet;
   }
