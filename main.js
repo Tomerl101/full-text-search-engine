@@ -11,8 +11,9 @@ searchEngine.addDoc('005');
 
 
 // console.log(searchEngine.search('(qui OR (brole AND tomer))'));
-console.log(searchEngine.search("(Moral AND (tomer OR (crime OR town)))"));
-// console.log(searchEngine.search("((Moral AND noa) OR Tomer) AND BLAa"));
+// console.log(searchEngine.search("(Moral AND (tomer OR (crime OR town)))"));
+// console.log(searchEngine.search("((Moral AND noa) OR Tomer) NOT water"));
+// console.log(searchEngine.search("NOT (Noa and tomer)"));
 // console.log(JSON.stringify(searchEngine.invertedIndex));
 console.log(searchEngine.docStore);
 // console.log(searchEngine.search("'tomer and noa'"));

@@ -117,7 +117,7 @@ class SearchEngine {
           docsSet = this.searchOR(tokenizeQuery, docsSet);
           break;
         case boolean.NOT:
-          docsSet = this.searchNOT(tokenizeQuery, docsSet);
+          // docsSet = this.searchNOT(tokenizeQuery, docsSet);
           break;
       }
       console.log('docsSets', docsSet);
@@ -168,7 +168,7 @@ class SearchEngine {
     let _docsSet = docsSet;
     if (tokenizeQuery.length == 1) {
       const [token1] = tokenizeQuery;
-      let setA = new Set(this.getDocs(token1));
+      let setA = this.getDocs(token1);
       if (docsSet.size == 0) {
         _docsSet = {};
       } else {
