@@ -18,8 +18,13 @@ class SearchEngine {
     try {
       const wordCount = {};
       const { id, title, body } = readJson(docId);
-
       const tokenizeQuery = tokenize(body);
+
+      if (this.isDocExist(id)) {
+        console.log('file already exist');
+        return;
+      }
+
       this.docStore[id] = this.getDocLength(body);
       tokenizeQuery.forEach(w => w in wordCount ? wordCount[w] += 1 : wordCount[w] = 1)
 
@@ -54,8 +59,27 @@ class SearchEngine {
     wordPostingList.df += 1;
   }
 
-  removeDoc() {
+  removeDoc(docId) {
+    try {
+      const { id, title, body } = readJson(docId);
+      const words = tokenize(body);
+      let wordPostingList;
 
+      words.forEach(word => {
+        wordPostingList = this.invertedIndex[word];
+        if (wordPostingList) {
+          delete wordPostingList.docs[id];
+          wordPostingList.df -= 1;
+          //remove word from inverted index if word posting is empty
+          if (wordPostingList.df == 0) {
+            delete this.invertedIndex[word];
+          }
+        }
+      });
+    } catch (error) {
+      console.log(error);
+      return;
+    }
   }
 
   search(searchQuery) {
@@ -76,7 +100,9 @@ class SearchEngine {
    * @param {string} word 
    */
   getDocs(word) {
-    return this.invertedIndex[word].docs;
+    if (word && this.invertedIndex[word]) {
+      return this.invertedIndex[word].docs;
+    }
   }
 
   /**
@@ -97,6 +123,10 @@ class SearchEngine {
    */
   get docStoreLength() {
     return Object.keys(this.docStore).length;
+  }
+
+  isDocExist(docId) {
+    return !!this.docStore[docId];
   }
 }
 
