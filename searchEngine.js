@@ -1,5 +1,6 @@
 const readJson = require('./util/readJson');
 const tokenize = require('./util/tokenize');
+const queryPriority = require('./util/queryPriority');
 
 class SearchEngine {
   constructor() {
@@ -87,6 +88,12 @@ class SearchEngine {
     if (!searchQuery) {
       return;
     }
+
+    const queryOrderByPriorty = queryPriority(searchQuery);
+
+    console.log("queryOrderByPriorty", queryOrderByPriorty);
+    return;
+
     const tokenizeQuery = tokenize(searchQuery);
     tokenizeQuery.forEach(w => {
       QueryDocs[w] = this.getDocs(w)
