@@ -8,8 +8,12 @@ const intersection = require('./util/intersection');
 
 class SearchEngine {
   constructor() {
-    this.invertedIndex = {};
-    this.docStore = {};
+    if (!SearchEngine.instance) {
+      this.invertedIndex = {};
+      this.docStore = {};
+      SearchEngine.instance = this;
+    }
+    return SearchEngine.instance;
   }
 
   /**
@@ -30,7 +34,7 @@ class SearchEngine {
         return;
       }
 
-      this.docStore[id] = this.getDocLength(body);
+      this.docStore[id] = { title, length: this.getDocLength(body) };
       tokenizeQuery.forEach(w => w in wordCount ? wordCount[w] += 1 : wordCount[w] = 1)
 
       //add word to the inverted index
@@ -96,6 +100,7 @@ class SearchEngine {
    * @param {string} searchQuery 
    */
   search(searchQuery) {
+    let result = {};
     let docsSet = new Set();
 
     if (!searchQuery) {
@@ -103,12 +108,10 @@ class SearchEngine {
     }
 
     const queryOrderByPriorty = queryPriority(searchQuery);
-
     queryOrderByPriorty.forEach(query => {
       const booleanOp = getBooleanOp(query);
       const tokenizeQuery = tokenize(query);
 
-      console.log('query', query);
       switch (booleanOp) {
         case boolean.AND:
           docsSet = this.searchAND(tokenizeQuery, docsSet);
@@ -120,11 +123,15 @@ class SearchEngine {
           // docsSet = this.searchNOT(tokenizeQuery, docsSet);
           break;
         default:
-          docsSet = { ...this.getDocs(query) };
+          docsSet = new Set(this.getDocs(query));
       }
-      console.log('docsSets', docsSet);
     })
-    return docsSet;
+
+
+    docsSet.forEach(value => {
+      result[value] = { title: this.docStore[value].title }
+    });
+    return result;
   }
 
   /**
@@ -201,4 +208,8 @@ class SearchEngine {
   }
 }
 
-module.exports = SearchEngine;
+//search engine singleston 
+const instance = new SearchEngine();
+Object.freeze(instance);
+
+module.exports = instance;
