@@ -5,7 +5,7 @@ const getBooleanOp = require('./util/getBooleanOp');
 const boolean = require('./constants/boolean');
 const union = require('./util/union');
 const intersection = require('./util/intersection');
-
+const difference = require('./util/difference');
 class SearchEngine {
   constructor() {
     if (!SearchEngine.instance) {
@@ -120,7 +120,7 @@ class SearchEngine {
           docsSet = this.searchOR(tokenizeQuery, docsSet);
           break;
         case boolean.NOT:
-          // docsSet = this.searchNOT(tokenizeQuery, docsSet);
+          docsSet = this.searchNOT(tokenizeQuery, docsSet);
           break;
         default:
           docsSet = new Set(this.getDocs(query));
@@ -205,6 +205,23 @@ class SearchEngine {
       _docsSet = union(setA, setB);
     }
     return _docsSet;
+  }
+
+  searchNOT(tokenizeQuery, docsSet) {
+    let _docsStore = this.docStore;
+    let _docsSet = docsSet;
+
+    if (tokenizeQuery.length == 1) {
+      const [token] = tokenizeQuery;
+      const setA = new Set(this.getDocs(token));
+      _docsSet = difference(_docsStore, setA);
+      return _docsSet;
+    }
+    else {
+      _docsSet = difference(_docsStore, _docsSet);
+      return _docsSet;
+    }
+
   }
 }
 
