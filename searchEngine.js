@@ -1,4 +1,5 @@
 const readJson = require('./util/readJson');
+const moveFile = require('./util/moveFile')
 const tokenize = require('./util/tokenize');
 const queryPriority = require('./util/queryPriority');
 const getBooleanOp = require('./util/getBooleanOp');
@@ -6,12 +7,18 @@ const boolean = require('./constants/boolean');
 const union = require('./util/union');
 const intersection = require('./util/intersection');
 const difference = require('./util/difference');
+const searchError = require('./constants/errors');
+
+const OLD_PATH = './storage/src/'
+const NEW_PATH = './storage/dest/';
 class SearchEngine {
   constructor() {
     if (!SearchEngine.instance) {
       this.invertedIndex = {};
       this.docStore = {};
+      this.queryWordsList = new Set();
       SearchEngine.instance = this;
+
     }
     return SearchEngine.instance;
   }
@@ -25,14 +32,15 @@ class SearchEngine {
    */
   addDoc(docId) {
     try {
-      const wordCount = {};
-      const { id, title, body } = readJson(docId);
-      const tokenizeQuery = tokenize(body);
-
-      if (this.isDocExist(id)) {
+      if (this.isDocExist(docId)) {
         console.log('file already exist');
         return;
       }
+
+      moveFile(OLD_PATH, NEW_PATH, docId);
+      const wordCount = {};
+      const { id, title, body } = readJson(docId);
+      const tokenizeQuery = tokenize(body, true)
 
       this.docStore[id] = { title, length: this.getDocLength(body) };
       tokenizeQuery.forEach(w => w in wordCount ? wordCount[w] += 1 : wordCount[w] = 1)
@@ -71,7 +79,7 @@ class SearchEngine {
   removeDoc(docId) {
     try {
       const { id, title, body } = readJson(docId);
-      const words = tokenize(body);
+      const words = tokenize(body, true);
       let wordPostingList;
 
       words.forEach(word => {
@@ -85,6 +93,7 @@ class SearchEngine {
           }
         }
       });
+      delete this.docStore[id];
     } catch (error) {
       console.log(error);
       return;
@@ -102,15 +111,25 @@ class SearchEngine {
   search(searchQuery) {
     let result = {};
     let docsSet = new Set();
+    this.queryWordsList.clear();
 
-    if (!searchQuery) {
-      return;
+    if (!searchQuery || searchQuery == "") {
+      return {};
+    }
+
+    if (Object.keys(this.docStore).length == 0) {
+      return result;
     }
 
     const queryOrderByPriorty = queryPriority(searchQuery);
+
+    if (!queryOrderByPriorty) {
+      return searchError.INVALID_QUERY;
+    }
     queryOrderByPriorty.forEach(query => {
       const booleanOp = getBooleanOp(query);
-      const tokenizeQuery = tokenize(query);
+      const tokenizeQuery = tokenize(query, true);
+      tokenize(query).forEach((word) => this.queryWordsList.add(word));
 
       switch (booleanOp) {
         case boolean.AND:
@@ -123,13 +142,17 @@ class SearchEngine {
           docsSet = this.searchNOT(tokenizeQuery, docsSet);
           break;
         default:
+          if (!query) {
+            break;
+          }
           docsSet = new Set(this.getDocs(query));
       }
     })
 
-
-    docsSet.forEach(value => {
-      result[value] = { title: this.docStore[value].title }
+    result.docs = [];
+    result.words = [...this.queryWordsList];
+    docsSet.forEach(doc => {
+      result.docs.push({ docId: doc, title: this.docStore[doc].title })
     });
     return result;
   }
@@ -177,6 +200,7 @@ class SearchEngine {
     let _docsSet = docsSet;
     if (tokenizeQuery.length == 1) {
       const [token1] = tokenizeQuery;
+      // this.queryWordsList.add(token1);
       let setA = new Set(this.getDocs(token1));
       if (docsSet.size == 0) {
         _docsSet = {};
@@ -185,6 +209,8 @@ class SearchEngine {
       }
     } else {
       const [token1, token2] = tokenizeQuery;
+      // this.queryWordsList.add(token1);
+      // this.queryWordsList.add(token2);
       let setA = new Set(this.getDocs(token1));
       let setB = new Set(this.getDocs(token2));
       _docsSet = intersection(setA, setB);
@@ -196,10 +222,13 @@ class SearchEngine {
     let _docsSet = docsSet;
     if (tokenizeQuery.length == 1) {
       const [token1] = tokenizeQuery;
+      // this.queryWordsList.add(token1);
       const setA = new Set(this.getDocs(token1));
       _docsSet = union(_docsSet, setA);
     } else {
       const [token1, token2] = tokenizeQuery;
+      // this.queryWordsList.add(token1);
+      // this.queryWordsList.add(token2);
       const setA = new Set(this.getDocs(token1));
       const setB = new Set(this.getDocs(token2));
       _docsSet = union(setA, setB);
@@ -210,7 +239,6 @@ class SearchEngine {
   searchNOT(tokenizeQuery, docsSet) {
     let _docsStore = this.docStore;
     let _docsSet = docsSet;
-
     if (tokenizeQuery.length == 1) {
       const [token] = tokenizeQuery;
       const setA = new Set(this.getDocs(token));
@@ -221,11 +249,10 @@ class SearchEngine {
       _docsSet = difference(_docsStore, _docsSet);
       return _docsSet;
     }
-
   }
 }
 
-//search engine singleston 
+//search engine singleton 
 const instance = new SearchEngine();
 Object.freeze(instance);
 

@@ -1,12 +1,12 @@
 const fs = require('fs');
-const PATH = './data/'
+const PATH = './storage/dest/'
 
 function readJson(fileName) {
     try {
         const obj = JSON.parse(fs.readFileSync(PATH + `${fileName}.json`, 'utf8'));
         return obj;
     } catch (e) {
-        throw (`file doesn't exist`);
+        throw (`file cannot find`);
     }
 }
 

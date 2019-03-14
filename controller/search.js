@@ -1,9 +1,45 @@
 const searchEngine = require('../searchEngine');
-export const searchQuery = async (req, res, next) => {
-    const { query } = req.body;
 
-    const result = await searchEngine.search(query);
-    if (error) return next(ApiError.ServerError);
-    if (response.statusCode == 401) return next(ApiError.NotAuthoraize);
-    res.status(200).json(body);
+const searchQuery = async (req, res) => {
+    try {
+        const { query } = req.body;
+        const result = await searchEngine.search(query);
+        res.status(200).json(result);
+    } catch (e) {
+        res.status(400).json(body);
+    }
+
+}
+
+const addDocument = async (req, res) => {
+    try {
+        const { docId } = req.body;
+        const result = await searchEngine.addDoc(docId);
+        res.status(200).json(result);
+    } catch (e) {
+        res.status(400).json(body);
+    }
+
+}
+
+const removeDocument = async (req, res) => {
+    try {
+        const { docId } = req.body;
+        const result = await searchEngine.removeDoc(docId);
+        res.status(200).json(result);
+    } catch (e) {
+        res.status(400).json(body);
+    }
+
+}
+
+const getDocument = async (req, res) => {
+
+}
+
+
+module.exports = {
+    searchQuery: searchQuery,
+    addDocument: addDocument,
+    removeDocument: removeDocument,
 }
