@@ -1,4 +1,5 @@
 const searchEngine = require('../searchEngine');
+const getDocumentHelper = require('../helper/getDocument');
 
 const searchQuery = async (req, res) => {
     try {
@@ -34,7 +35,13 @@ const removeDocument = async (req, res) => {
 }
 
 const getDocument = async (req, res) => {
-
+    try {
+        const { docId, searchWords } = req.body;
+        const data = await getDocumentHelper(docId, searchWords);
+        res.status(200).render("index", { data: data });
+    } catch (e) {
+        res.status(500).json({ e });
+    }
 }
 
 
@@ -42,4 +49,5 @@ module.exports = {
     searchQuery: searchQuery,
     addDocument: addDocument,
     removeDocument: removeDocument,
+    getDocument: getDocument
 }

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Super Awesome</title>
+
+  <!-- CSS (load bootstrap from a CDN) -->
+  <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+  <style>
+    body {
+      padding-top: 50px;
+    }
+
+    .high-light {
+      background-color: yellow;
+    }
+  </style>
+</head>
+
+<body class="container">
+
+  <main>
+    <div class="row">
+      <div class="col-sm-8">
+        <div class="jumbotron">
+          <h1>This is great</h1>
+          <p>Welcome to templating using EJS</p>
+        </div>
+      </div>
+
+      <div><%- data %></div>
+
+    </div>
+  </main>
+
+
+</body>
+
+</html>
