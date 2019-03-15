@@ -127,8 +127,10 @@ class SearchEngine {
       return searchError.INVALID_QUERY;
     }
     queryOrderByPriorty.forEach(query => {
+      console.log('the query->', query);
       const booleanOp = getBooleanOp(query);
       const tokenizeQuery = tokenize(query, true);
+      console.log('tokenizeQuery->', tokenizeQuery)
       tokenize(query).forEach((word) => this.queryWordsList.add(word));
 
       switch (booleanOp) {
@@ -142,11 +144,14 @@ class SearchEngine {
           docsSet = this.searchNOT(tokenizeQuery, docsSet);
           break;
         default:
-          if (!query) {
+          if (!tokenizeQuery) {
             break;
           }
-          docsSet = new Set(this.getDocs(query));
+          console.log('inside -->', tokenizeQuery);
+          docsSet = new Set(this.getDocs(tokenizeQuery));
       }
+      console.log('the documents->', docsSet);
+
     })
 
     result.docs = [];

@@ -1,10 +1,11 @@
 const searchEngine = require('../searchEngine');
-const getDocumentHelper = require('../helper/getDocument');
+const readJson = require('../util/readJson');
 
 const searchQuery = async (req, res) => {
     try {
         const { query } = req.body;
         const result = await searchEngine.search(query);
+        console.log(result);
         res.status(200).json(result);
     } catch (e) {
         res.status(400).json(body);
@@ -34,11 +35,11 @@ const removeDocument = async (req, res) => {
 
 }
 
-const getDocument = async (req, res) => {
+const getDocument = (req, res) => {
     try {
-        const { docId, searchWords } = req.body;
-        const data = await getDocumentHelper(docId, searchWords);
-        res.status(200).render("index", { data: data });
+        const { docId } = req.body;
+        const result = readJson(docId);
+        res.status(200).json(result);
     } catch (e) {
         res.status(500).json({ e });
     }
