@@ -13,24 +13,24 @@ const searchQuery = async (req, res) => {
 
 }
 
-const addDocument = async (req, res) => {
+const addDocument = (req, res) => {
     try {
         const { docId } = req.body;
-        const result = await searchEngine.addDoc(docId);
-        res.status(200).json(result);
+        searchEngine.addDoc(docId);
+        res.status(200).json({ result: 'add document successfuly' });
     } catch (e) {
-        res.status(400).json(body);
+        res.status(400).json({ result: 'add document not succeed' });
     }
 
 }
 
-const removeDocument = async (req, res) => {
+const removeDocument = (req, res) => {
     try {
         const { docId } = req.body;
-        const result = await searchEngine.removeDoc(docId);
-        res.status(200).json(result);
+        searchEngine.removeDoc(docId);
+        res.status(200).json({ result: 'remove document successfuly' });
     } catch (e) {
-        res.status(400).json(body);
+        res.status(400).json({ result: 'add document not succeed' });
     }
 
 }

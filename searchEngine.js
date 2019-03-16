@@ -37,11 +37,9 @@ class SearchEngine {
         return;
       }
 
-      console.log('docId--->', docId);
       moveFile(OLD_PATH, NEW_PATH, docId);
       const wordCount = {};
       const { id, title, body } = readJson(docId);
-      console.log('title-->', title);
       const tokenizeQuery = tokenize(body, true)
 
       this.docStore[id] = { title, length: this.getDocLength(body) };
@@ -55,7 +53,6 @@ class SearchEngine {
     } catch (error) {
       console.log(error);
     }
-    return 'SUCCESSSS!!!!';
   }
 
 
@@ -84,14 +81,10 @@ class SearchEngine {
       const words = tokenize(body, true);
       let wordPostingList;
       words.forEach(word => {
-        console.log('word:', word);
-        // console.log('1.word in index->', this.invertedIndex[word]);
         wordPostingList = this.invertedIndex[word];
         if (wordPostingList && wordPostingList.docs[id]) {
           delete wordPostingList.docs[id];
           wordPostingList.df -= 1;
-          // console.log('2.word in index->', this.invertedIndex[word]);
-
           //remove word from inverted index if word posting is empty
           if (wordPostingList.df == 0) {
             delete this.invertedIndex[word];
