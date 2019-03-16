@@ -6,12 +6,10 @@ const searchController = require('./controller/search');
 searchEngine.addDoc('001');
 searchEngine.addDoc('002');
 // searchEngine.addDoc('003');
+// searchEngine.addDoc('004');
+// searchEngine.addDoc('005');
 
-
-//TODO: REMOVE DOCS FROM DOCS STORE WHEN REMOVE FILE!!!!
-
-// console.log(searchEngine.docStore);
-// console.log(JSON.stringify(searchEngine.invertedIndex));
+console.log(searchEngine.invertedIndex);
 
 const app = express();
 
@@ -23,6 +21,8 @@ app.use(express.json());
 
 app.post('/search', searchController.searchQuery);
 app.post('/getDocument', searchController.getDocument);
+app.post('/addDocument', searchController.addDocument);
+app.post('/removeDocument', searchController.removeDocument);
 
 app.listen(8080, () => {
     console.log(`Server running on port 8080`);
