@@ -5,11 +5,10 @@ const searchController = require('./controller/search');
 
 searchEngine.addDoc('001');
 searchEngine.addDoc('002');
-// searchEngine.addDoc('003');
-// searchEngine.addDoc('004');
-// searchEngine.addDoc('005');
-
-console.log(searchEngine.invertedIndex);
+searchEngine.addDoc('003');
+searchEngine.addDoc('004');
+searchEngine.addDoc('005');
+// console.log(searchEngine.invertedIndex);
 
 const app = express();
 

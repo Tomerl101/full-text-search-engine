@@ -33,7 +33,6 @@ class SearchEngine {
   addDoc(docId) {
     try {
       if (this.isDocExist(docId)) {
-        console.log('file already exist');
         return;
       }
 
@@ -119,38 +118,41 @@ class SearchEngine {
       return result;
     }
 
-    const queryOrderByPriorty = queryPriority(searchQuery);
+    if (searchQuery.endsWith('*')) {
+      const word = searchQuery.trim().slice(0, -1);
+      this.queryWordsList.add(word)
+      docsSet = this.searchWildCard(word);
+    } else {
+      const queryOrderByPriorty = queryPriority(searchQuery);
 
-    if (!queryOrderByPriorty) {
-      return searchError.INVALID_QUERY;
-    }
-    queryOrderByPriorty.forEach(query => {
-      console.log('the query->', query);
-      const booleanOp = getBooleanOp(query);
-      const tokenizeQuery = tokenize(query, true);
-      console.log('tokenizeQuery->', tokenizeQuery)
-      tokenize(query).forEach((word) => this.queryWordsList.add(word));
-
-      switch (booleanOp) {
-        case boolean.AND:
-          docsSet = this.searchAND(tokenizeQuery, docsSet);
-          break;
-        case boolean.OR:
-          docsSet = this.searchOR(tokenizeQuery, docsSet);
-          break;
-        case boolean.NOT:
-          docsSet = this.searchNOT(tokenizeQuery, docsSet);
-          break;
-        default:
-          if (!tokenizeQuery) {
-            break;
-          }
-          console.log('inside -->', tokenizeQuery);
-          docsSet = new Set(this.getDocs(tokenizeQuery));
+      if (!queryOrderByPriorty) {
+        return searchError.INVALID_QUERY;
       }
-      console.log('the documents->', docsSet);
+      queryOrderByPriorty.forEach(query => {
+        console.log('the query->', query);
+        const booleanOp = getBooleanOp(query);
+        const tokenizeQuery = tokenize(query, true);
+        console.log('tokenizeQuery->', tokenizeQuery)
+        tokenize(query).forEach((word) => this.queryWordsList.add(word));
 
-    })
+        switch (booleanOp) {
+          case boolean.AND:
+            docsSet = this.searchAND(tokenizeQuery, docsSet);
+            break;
+          case boolean.OR:
+            docsSet = this.searchOR(tokenizeQuery, docsSet);
+            break;
+          case boolean.NOT:
+            docsSet = this.searchNOT(tokenizeQuery, docsSet);
+            break;
+          default:
+            if (!tokenizeQuery) {
+              break;
+            }
+            docsSet = new Set(this.getDocs(tokenizeQuery));
+        }
+      })
+    }
 
     result.docs = [];
     result.words = [...this.queryWordsList];
@@ -253,7 +255,21 @@ class SearchEngine {
       return _docsSet;
     }
   }
+
+  searchWildCard(word) {
+    const _docsSet = new Set();
+    Object.keys(this.invertedIndex).forEach(key => {
+      if (key.startsWith(word)) {
+        _docsSet.add(...this.getDocs(key));
+      }
+    })
+    return _docsSet;
+  }
+
 }
+
+
+
 
 //search engine singleton 
 const instance = new SearchEngine();
