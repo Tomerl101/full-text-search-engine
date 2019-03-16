@@ -119,8 +119,8 @@ class SearchEngine {
     }
 
     if (searchQuery.endsWith('*')) {
-      const word = searchQuery.trim().slice(0, -1);
-      this.queryWordsList.add(word)
+      this.queryWordsList.add(searchQuery.toLowerCase());
+      const word = searchQuery.trim().slice(0, -1).toLocaleLowerCase();
       docsSet = this.searchWildCard(word);
     } else {
       const queryOrderByPriorty = queryPriority(searchQuery);
@@ -205,7 +205,6 @@ class SearchEngine {
     let _docsSet = docsSet;
     if (tokenizeQuery.length == 1) {
       const [token1] = tokenizeQuery;
-      // this.queryWordsList.add(token1);
       let setA = new Set(this.getDocs(token1));
       if (docsSet.size == 0) {
         _docsSet = {};
@@ -214,8 +213,6 @@ class SearchEngine {
       }
     } else {
       const [token1, token2] = tokenizeQuery;
-      // this.queryWordsList.add(token1);
-      // this.queryWordsList.add(token2);
       let setA = new Set(this.getDocs(token1));
       let setB = new Set(this.getDocs(token2));
       _docsSet = intersection(setA, setB);
@@ -227,13 +224,10 @@ class SearchEngine {
     let _docsSet = docsSet;
     if (tokenizeQuery.length == 1) {
       const [token1] = tokenizeQuery;
-      // this.queryWordsList.add(token1);
       const setA = new Set(this.getDocs(token1));
       _docsSet = union(_docsSet, setA);
     } else {
       const [token1, token2] = tokenizeQuery;
-      // this.queryWordsList.add(token1);
-      // this.queryWordsList.add(token2);
       const setA = new Set(this.getDocs(token1));
       const setB = new Set(this.getDocs(token2));
       _docsSet = union(setA, setB);
@@ -257,10 +251,12 @@ class SearchEngine {
   }
 
   searchWildCard(word) {
-    const _docsSet = new Set();
+    let _docsSet = new Set();
     Object.keys(this.invertedIndex).forEach(key => {
       if (key.startsWith(word)) {
-        _docsSet.add(...this.getDocs(key));
+        this.getDocs(key).forEach(docId => {
+          _docsSet.add(docId);
+        })
       }
     })
     return _docsSet;
